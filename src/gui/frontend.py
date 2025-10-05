@@ -1,3 +1,4 @@
+import random
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon,QKeySequence
 from PyQt5.QtWidgets import (
@@ -40,6 +41,12 @@ class MainWindow(QMainWindow):
         
         self.player_symbol = 'X'
         self.difficulty = 'Easy'
+        self.game_state = [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', '']
+        ]
+        self.buttons = []
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
         
@@ -117,23 +124,42 @@ class MainWindow(QMainWindow):
         board_layout.setSpacing(10)
         
        
-        
+        temp_buttons_grid = []
+        buttons_indx=[]
         for i in range(5):
             if i % 2 == 1:
                 board_layout.addWidget(HLine(), i,0, 1,3)
                 board_layout.addWidget(HLine(), i,2, 1,3)
                 board_layout.addWidget(HLine(), i,4, 1,3)
                 continue
+                
+            buttons_row = []
             for j in range(5):
                 
                 if j % 2 == 1:
                     board_layout.addWidget(VLine(), i, j,3,1)
                     continue
                 
-                button = QPushButton(f"Button {i},{j}")
+                button = QPushButton('')
+                button.setStyleSheet("font-size: 24px;")
+                
+                buttons_indx.append((i//2,j//2))
+                
                 button.setFixedSize(100,100)
+                
+                buttons_row.append(button)
+                
                 board_layout.addWidget(button, i, j)
-           
+            temp_buttons_grid.append(buttons_row)
+        
+        cont = 0
+        for button_row in temp_buttons_grid:
+            for button in button_row:
+                row, col = buttons_indx[cont]
+                button.clicked.connect(lambda _, r=row, c=col: self.player_move(r, c))
+                cont += 1 
+                
+        self.buttons = temp_buttons_grid
         
         return board_widget
     def start_game(self):
@@ -141,6 +167,25 @@ class MainWindow(QMainWindow):
         print(f"Starting game with symbol {self.player_symbol} and difficulty {self.difficulty}")
         self.stacked_widget.setCurrentIndex(1)
         
+    def player_move(self, row, col):
+        
+        if self.game_state[row][col] == '':
+            self.game_state[row][col] = self.player_symbol
+            self.buttons[row][col].setText(self.player_symbol)
+        else:
+            print("Cell already occupied!")
+            
+        
+        self.pc_move()
+        
+    def pc_move(self):
+       
+        empty_cells = [(i, j) for i in range(3) for j in range(3) if self.game_state[i][j] == '']
+        if empty_cells:
+            row, col = random.choice(empty_cells)
+            pc_symbol = 'O' if self.player_symbol == 'X' else 'X'
+            self.game_state[row][col] = pc_symbol
+            self.buttons[row][col].setText(pc_symbol)
         
        
         
