@@ -210,18 +210,4 @@ class MainWindow(QMainWindow):
             else:
                 print("Cell already occupied!")
                 break
-            
-
-    def pc_move(self):
-        if self.free_slots:
-            row, col, _ = best_move(-1, self.game_state, self.free_slots)
-            pc_symbol = 'O' if self.player_symbol == 'X' else 'X'
-            self.game_state[row][col] = -1
-            self.buttons[row][col].setText(pc_symbol)
-            self.free_slots.remove([row,col])
-            if won(self.game_state, -1):
-                print("PC wins!")
-                return
-            if self.free_slots == []:
-                print("It's a draw!")
-                return
+        
