@@ -20,6 +20,8 @@ from PyQt5.QtWidgets import (
     QButtonGroup,
     QComboBox,
 )
+from game.logic import is_valid_move, won
+from ai.tree_search import best_move
 
 class VLine(QFrame):
     def __init__(self):
@@ -46,6 +48,13 @@ class MainWindow(QMainWindow):
             ['', '', ''],
             ['', '', '']
         ]
+
+        self.free_slots = [
+            [0,0], [0,1], [0,2],
+            [1,0], [1,1], [1,2],
+            [2,0], [2,1], [2,2],
+        ]
+
         self.buttons = []
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
@@ -162,6 +171,7 @@ class MainWindow(QMainWindow):
         self.buttons = temp_buttons_grid
         
         return board_widget
+    
     def start_game(self):
         
         print(f"Starting game with symbol {self.player_symbol} and difficulty {self.difficulty}")
@@ -169,30 +179,35 @@ class MainWindow(QMainWindow):
         
     def player_move(self, row, col):
         
-        if self.game_state[row][col] == '':
-            self.game_state[row][col] = self.player_symbol
-            self.buttons[row][col].setText(self.player_symbol)
-        else:
-            print("Cell already occupied!")
+        while True:
+            if is_valid_move(row, col, self.free_slots):
+                self.game_state[row][col] = +1
+                self.buttons[row][col].setText(self.player_symbol)
+                self.free_slots.remove([row,col])
+                if won(self.game_state, +1):
+                    print("You win!")
+                
+                if self.free_slots == []:
+                    print("It's a draw!")
+
+                self.pc_move()
+                break
+
+            else:
+                print("Cell already occupied!")
+                break
             
-        
-        self.pc_move()
-        
+
     def pc_move(self):
-       
-        empty_cells = [(i, j) for i in range(3) for j in range(3) if self.game_state[i][j] == '']
-        if empty_cells:
-            row, col = random.choice(empty_cells)
+        if self.free_slots:
+            row, col, _ = best_move(-1, self.game_state, self.free_slots)
             pc_symbol = 'O' if self.player_symbol == 'X' else 'X'
-            self.game_state[row][col] = pc_symbol
+            self.game_state[row][col] = -1
             self.buttons[row][col].setText(pc_symbol)
-        
-       
-        
-        
-        
-        
-app = QApplication([])
-window = MainWindow()
-window.show()
-app.exec()
+            self.free_slots.remove([row,col])
+            if won(self.game_state, -1):
+                print("PC wins!")
+                return
+            if self.free_slots == []:
+                print("It's a draw!")
+                return
