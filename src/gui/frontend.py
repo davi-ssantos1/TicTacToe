@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import (
     QComboBox,
 )
 from game.logic import is_valid_move, won
-from ai.tree_search import best_move
+from IA.tree_search import best_move
 
 class VLine(QFrame):
     def __init__(self):
