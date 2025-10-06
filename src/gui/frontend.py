@@ -180,7 +180,7 @@ class MainWindow(QMainWindow):
         self.stacked_widget.setCurrentIndex(1)
         
     def player_move(self, row, col):
-<<<<<<< HEAD
+
         
         if self.game_state[row][col] == '':
             self.game_state[row][col] = self.player_symbol
@@ -192,16 +192,7 @@ class MainWindow(QMainWindow):
         self.pc_move()
         
     def pc_move(self):
-       
-        empty_cells = [(i, j) for i in range(3) for j in range(3) if self.game_state[i][j] == '']
-        if empty_cells:
-            row, col = random.choice(empty_cells)
-            pc_symbol = 'O' if self.player_symbol == 'X' else 'X'
-            self.game_state[row][col] = pc_symbol
-            self.buttons[row][col].setText(pc_symbol)
-=======
->>>>>>> origin/feature/davi-backend
-        
+      
         while True:
             if is_valid_move(row, col, self.free_slots):
                 self.game_state[row][col] = +1
