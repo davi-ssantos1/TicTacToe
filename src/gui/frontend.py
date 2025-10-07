@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (
     QRadioButton,
     QButtonGroup,
     QComboBox,
+    QMessageBox
 )
 from game.logic import is_valid_move, won
 from IA.tree_search import best_move
@@ -177,26 +178,29 @@ class MainWindow(QMainWindow):
         print(f"Starting game with symbol {self.player_symbol} and difficulty {self.difficulty}")
         self.stacked_widget.setCurrentIndex(1)
         
-        
-    def player_move(self):
+    def player_move(self,row,col):
       
-        while True:
-            if is_valid_move(row, col, self.free_slots):
-                self.game_state[row][col] = +1
-                self.buttons[row][col].setText(self.player_symbol)
-                self.free_slots.remove([row,col])
-                if won(self.game_state, +1):
-                    print("You win!")
-                
-                if self.free_slots == []:
-                    print("It's a draw!")
+        if [row, col] not in self.free_slots:
+            print("Célula já ocupada!")
+            return # Simplesmente sai da função se o movimento for inválido
 
-                self.pc_move()
-                break
+        # 1. Atualiza o estado lógico e a interface com a jogada do jogador
+        self.game_state[row][col] = +1  # Jogador é sempre +1
+        self.buttons[row][col].setText(self.player_symbol)
+        self.free_slots.remove([row, col])
 
-            else:
-                print("Cell already occupied!")
-                break
+        # 2. Verifica se o jogador venceu
+        if won(self.game_state, +1):
+            self.show_game_over("Vitória!", "Parabéns, você venceu!")
+            return # O jogo acabou, não chama o PC
+
+        # 3. Verifica se deu empate
+        if not self.free_slots:
+            self.show_game_over("Empate!", "O jogo terminou em empate.")
+            return # O jogo acabou, não chama o PC
+
+        # 4. Se o jogo continua, é a vez do PC
+        self.pc_move()
 
     def pc_move(self):
         if self.free_slots:
@@ -205,10 +209,46 @@ class MainWindow(QMainWindow):
             self.game_state[row][col] = -1
             self.buttons[row][col].setText(pc_symbol)
             self.free_slots.remove([row,col])
-            if won(self.game_state, -1):
-                print("PC wins!")
-                return
-            if self.free_slots == []:
-                print("It's a draw!")
-                return
+            
+        if won(self.game_state, -1):
+            self.show_game_over("Derrota!", "O computador venceu.")
+            return
+        
+        if self.free_slots == []:
+            self.show_game_over("Empate!", "O jogo terminou em empate.")
+            return
 
+    def show_game_over(self, title,message):
+        
+        msgBox = QMessageBox(self)
+        msgBox.setWindowTitle(title)
+        msgBox.setText(message)
+        msgBox.setIcon(QMessageBox.Information)
+        
+        msgBox.addButton("Sair", QMessageBox.RejectRole)
+        play_again_button = msgBox.addButton("Jogar Novamente", QMessageBox.AcceptRole)
+        msgBox.exec_()
+        
+        if msgBox.clickedButton() == play_again_button:
+            self.reset_game()
+        else:
+            QApplication.quit()
+            
+    def reset_game(self):
+        self.game_state = [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', '']
+        ]
+        self.free_slots = [
+            [0,0], [0,1], [0,2],
+            [1,0], [1,1], [1,2],
+            [2,0], [2,1], [2,2],
+        ]
+        
+        for row in self.buttons:
+            for button in row:
+                button.setText('')
+                button.setEnabled(True)
+                
+        self.stacked_widget.setCurrentIndex(0)
